@@ -114,13 +114,13 @@ jobs:
           echo "Compiled classes found:"
           find target/classes -type f | head -10
 
-      - name: Use Java 11 for SonarQube
+      - name: Use Java 17 for SonarQube
         run: |
-          export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
           echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
           echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
 
-      - name: Verify Java 11
+      - name: Verify Java 17
         run: |
           java -version
 
@@ -130,11 +130,8 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
           ./mvnw -B sonar:sonar \
-            -Dsonar.projectKey=great-big-example-application \
             -Dsonar.host.url="$SONAR_HOST_URL" \
-            -Dsonar.login="$SONAR_TOKEN" \
-            -Dsonar.java.binaries=target/classes
-
+            -Dsonar.token="$SONAR_TOKEN" \
 
 
   nexus-deploy:
