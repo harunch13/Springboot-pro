@@ -44,11 +44,6 @@ jobs:
       - name: Run Tests
         run: |
           ./mvnw -B test
-
-      - name: Setup Node for bootstrap
-      - uses: actions/setup-node@v4
-      - with:
-       node-version '14'
       
       - name: Prepare Legacy npm
         run: |
