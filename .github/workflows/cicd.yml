@@ -24,17 +24,13 @@ jobs:
           echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
           echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
       - name: Verify Java 8
-        run: |
-          java -version
+        run: java -version
       - name: Verify Maven
-        run: |
-          ./mvnw -version
+        run: ./mvnw -version
       - name: Compile Application
-        run: |
-          ./mvnw -B compile
+        run: ./mvnw -B compile
       - name: Run Tests
-        run: |
-          ./mvnw -B test
+        run: ./mvnw -B test
       - name: Prepare Legacy npm
         run: |
           mkdir -p .local-npm
@@ -55,11 +51,9 @@ jobs:
           echo "$PWD/node" >> "$GITHUB_PATH"
           echo "NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt" >> "$GITHUB_ENV"
       - name: Package WAR
-        run: |
-          ./mvnw -B package -Pprod -DskipTests
+        run: ./mvnw -B package -Pprod -DskipTests
       - name: Verify WAR
-        run: |
-          ls -lh target/*.war
+        run: ls -lh target/*.war
 
   sonarqube:
     name: SonarQube Analysis
@@ -76,18 +70,14 @@ jobs:
           echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
           echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
       - name: Verify Java 8
-        run: |
-          java -version
+        run: java -version
       - name: Verify Maven
-        run: |
-          ./mvnw -version
+        run: ./mvnw -version
       - name: Compile Application
-        run: |
-          ./mvnw -B compile
+        run: ./mvnw -B compile
       - name: Verify Compiled Classes
         run: |
           test -d target/classes
-          echo "Compiled classes found:"
           find target/classes -type f | head -10
       - name: Use Java 17 for SonarQube
         run: |
@@ -95,8 +85,7 @@ jobs:
           echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
           echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
       - name: Verify Java 17
-        run: |
-          java -version
+        run: java -version
       - name: Run SonarQube Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -124,11 +113,9 @@ jobs:
           echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
           echo "$JAVA_HOME/bin" >> "$GITHUB_PATH"
       - name: Verify Java 8
-        run: |
-          java -version
+        run: java -version
       - name: Verify Maven
-        run: |
-          ./mvnw -version
+        run: ./mvnw -version
       - name: Create Maven Settings
         run: |
           mkdir -p ~/.m2
@@ -151,8 +138,7 @@ jobs:
           </settings>
           EOF
       - name: Deploy to Nexus
-        run: |
-          ./mvnw -B deploy -DskipTests
+        run: ./mvnw -B deploy -DskipTests
 
   tomcat:
     name: Docker Tomcat UAT
@@ -172,19 +158,20 @@ jobs:
             -o /tmp/great-big-example-application-0.0.1.war \
             http://localhost:9000/repository/maven-releases/org/exampleapps/greatbig/great-big-example-application/0.0.1/great-big-example-application-0.0.1.war
       - name: Verify WAR
-        run: |
-          ls -lh /tmp/great-big-example-application-0.0.1.war
-      - name: Ensure tomcat-sam container exists
+        run: ls -lh /tmp/great-big-example-application-0.0.1.war
+      - name: Ensure tomcat-sam container exists (Java 8 fix)
         run: |
           if [ "$(docker ps -a -q -f name=^tomcat-sam$)" = "" ]; then
-            echo "Creating tomcat-sam container..."
-            docker run -d --name tomcat-sam -p 8008:8080 tomcat:9
+            echo "Creating tomcat-sam with JDK8 image..."
+            docker run -d --name tomcat-sam -p 8008:8080 tomcat:9-jdk8
             sleep 10
           else
-            echo "tomcat-sam exists, starting it..."
-            docker start tomcat-sam || true
-            sleep 5
+            echo "Recreating tomcat-sam with JDK8 image to fix JAXB..."
+            docker rm -f tomcat-sam || true
+            docker run -d --name tomcat-sam -p 8008:8080 tomcat:9-jdk8
+            sleep 10
           fi
+          docker exec tomcat-sam java -version
           docker ps | grep tomcat-sam
       - name: Remove Previous UAT Deployment
         run: |
@@ -196,7 +183,7 @@ jobs:
       - name: Restart Docker Tomcat
         run: |
           docker restart tomcat-sam
-          sleep 10
+          sleep 15
       - name: Verify WAR Deployment
         run: |
           docker exec tomcat-sam ls -lh /usr/local/tomcat/webapps/great-big-example-application-0.0.1.war
@@ -212,11 +199,12 @@ jobs:
               exit 0
             fi
             echo "Application not ready yet. Waiting 5 seconds..."
+            docker logs tomcat-sam --tail 20 || true
             sleep 5
             ATTEMPT=$((ATTEMPT + 1))
           done
           echo "UAT FAILED: Application did not return HTTP 200 within 120 seconds."
-          docker logs tomcat-sam --tail 50 || true
+          docker logs tomcat-sam --tail 100 || true
           exit 1
 
   dockerhub-push:
@@ -238,11 +226,9 @@ jobs:
             -o target/great-big-example-application-0.0.1.war \
             http://localhost:9000/repository/maven-releases/org/exampleapps/greatbig/great-big-example-application/0.0.1/great-big-example-application-0.0.1.war
       - name: Verify WAR
-        run: |
-          ls -lh target/great-big-example-application-0.0.1.war
+        run: ls -lh target/great-big-example-application-0.0.1.war
       - name: Verify Docker
-        run: |
-          docker --version
+        run: docker --version
       - name: Login to Docker Hub
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -252,11 +238,6 @@ jobs:
             --username "$DOCKERHUB_USERNAME" \
             --password-stdin
       - name: Build Docker Image
-        run: |
-          docker build \
-            -t harunch/great-big-example-application:0.0.1 \
-            .
+        run: docker build -t harunch/great-big-example-application:0.0.1 .
       - name: Push Docker Image
-        run: |
-          docker push \
-            harunch/great-big-example-application:0.0.1
+        run: docker push harunch/great-big-example-application:0.0.1
