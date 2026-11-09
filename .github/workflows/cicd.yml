@@ -87,6 +87,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: fix mvnw permission
+        run: chmod +x ./mvnw
+
       - name: Use Java 8 for Application Build
         run: |
           export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
