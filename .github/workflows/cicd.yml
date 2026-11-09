@@ -197,7 +197,7 @@ jobs:
 
 
 
-  tomcat-uat:
+  tomcat:
     name: Docker Tomcat UAT
     needs: nexus-deploy
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -224,7 +224,7 @@ jobs:
 
       - name: Stop Docker Tomcat
         run: |
-          docker stop tomcat9
+          docker stop tomcat
 
       - name: Remove Previous UAT Deployment
         run: |
@@ -237,7 +237,7 @@ jobs:
 
       - name: Start Docker Tomcat
         run: |
-          docker start tomcat9
+          docker start tomcat
 
       - name: Verify WAR Deployment
         run: |
@@ -267,7 +267,7 @@ jobs:
 
   dockerhub-push:
     name: Build and Push Docker Image
-    needs: tomcat-uat
+    needs: tomcat-sam
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: self-hosted
 
