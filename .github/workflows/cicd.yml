@@ -245,7 +245,7 @@ jobs:
 
       - name: UAT HTTP Test
         run: |
-          URL="http://localhost:8090/great-big-example-application-0.0.1/"
+          URL="http://localhost:9000/great-big-example-application-0.0.1/"
           MAX_ATTEMPTS=24
           ATTEMPT=1
 
@@ -286,7 +286,7 @@ jobs:
           curl -fL \
             -u "$NEXUS_USERNAME:$NEXUS_PASSWORD" \
             -o target/great-big-example-application-0.0.1.war \
-            http://localhost:8081/repository/maven-releases/org/exampleapps/greatbig/great-big-example-application/0.0.1/great-big-example-application-0.0.1.war
+            http://localhost:9000/repository/maven-releases/org/exampleapps/greatbig/great-big-example-application/0.0.1/great-big-example-application-0.0.1.war
 
       - name: Verify WAR
         run: |
@@ -308,10 +308,10 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build \
-            -t lukmanabdallah/great-big-example-application:0.0.1 \
+            -t harunch/great-big-example-application:0.0.1 \
             .
 
       - name: Push Docker Image
         run: |
           docker push \
-            lukmanabdallah/great-big-example-application:0.0.1
+            harunch/great-big-example-application:0.0.1
