@@ -130,8 +130,10 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
           ./mvnw -B sonar:sonar \
-            -Dsonar.host.url="$SONAR_HOST_URL" \
-            -Dsonar.token="$SONAR_TOKEN" \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.token=$SONAR_TOKEN \
+            -Dsonar.organization=harunch13 \
+            -Dsonar.projectKey=great-big-example-application
 
 
   nexus-deploy:
